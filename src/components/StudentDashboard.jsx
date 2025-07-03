@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { socket } from "../socket";
+import StudentNameEntry from "./component/StudentNameEntry";
+import WaitingLoader from "./component/WaitingLoader";
+import QuestionInterface from "./component/QuestionInterface";
+import ResultsView from "./component/ResultsView";
 
 export default function StudentDashboard() {
   const [name, setName] = useState(sessionStorage.getItem("studentName") || "");
@@ -7,122 +11,112 @@ export default function StudentDashboard() {
   const [selected, setSelected] = useState("");
   const [results, setResults] = useState({});
   const [answered, setAnswered] = useState(false);
-
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [totalResponses, setTotalResponses] = useState(0);
+  const [hasJoined, setHasJoined] = useState(false);
+  // On mount, set up socket listeners
   useEffect(() => {
-    if (name) {
-      socket.emit("student-join", name);
-    }
+  socket.on("new-poll", (poll) => {
+    console.log("New poll received:", poll);
+    setQuestion(poll);
+    setAnswered(false);
+    setSelected("");
+    setResults({});
+    setTimeLeft(poll.duration || 60);
+  });
 
-    socket.on("new-poll", (poll) => {
-      setQuestion(poll);
-      setAnswered(false);
-      setSelected("");
-      setResults({});
-    });
+  socket.on("poll-results", (data) => {
+    console.log("Poll results received:", data);
+    setResults(data);
+    const total = Object.values(data).reduce((sum, count) => sum + count, 0);
+    setTotalResponses(total);
+  });
 
-    socket.on("poll-results", (data) => {
-      setResults(data);
-    });
-
-    socket.on("poll-ended", () => {
-      setAnswered(true);
-    });
-
-    return () => {
-      socket.off("new-poll");
-      socket.off("poll-results");
-      socket.off("poll-ended");
-    };
-  }, [name]);
-
-  const submit = () => {
-    socket.emit("submit-answer", selected);
+  socket.on("poll-ended", () => {
+    console.log("Poll ended.");
     setAnswered(true);
+  });
+
+  return () => {
+    socket.off("new-poll");
+    socket.off("poll-results");
+    socket.off("poll-ended");
+  };
+}, []);
+
+
+
+  // Timer countdown
+  useEffect(() => {
+    if (question && !answered && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setAnswered(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [question, answered, timeLeft]);
+
+  const handleContinue = () => {
+  if (name.trim()) {
+    sessionStorage.setItem("studentName", name);
+    socket.emit("student-join", name);
+    setHasJoined(true);
+    }
   };
 
-  if (!name) {
+
+  const handleSubmit = () => {
+    if (selected) {
+      socket.emit("submit-answer", selected);
+      setAnswered(true);
+    }
+  };
+
+  // Render flow
+
+  // 1. Enter name screen
+  if (!hasJoined) {
+  return (
+    <StudentNameEntry
+      name={name}
+      setName={setName}
+      onContinue={handleContinue}
+    />
+  );
+}
+
+
+  // 2. Question interface (poll active)
+  if (question && !answered) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-lightbg">
-        <div className="bg-white p-6 rounded shadow-md max-w-sm w-full text-center">
-          <h2 className="text-xl font-bold text-dark mb-2">Join as Student</h2>
-          <input
-            className="w-full border p-2 rounded mb-4"
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              sessionStorage.setItem("studentName", name);
-              socket.emit("student-join", name);
-            }}
-            className="w-full py-3 bg-primary text-white rounded hover:bg-accent transition"
-          >
-            Join
-          </button>
-        </div>
-      </div>
+      <QuestionInterface
+        question={question}
+        selected={selected}
+        setSelected={setSelected}
+        onSubmit={handleSubmit}
+        timeLeft={timeLeft}
+      />
     );
   }
 
-  return (
-    <div className="min-h-screen bg-lightbg flex flex-col items-center p-6">
-      <div className="max-w-xl w-full bg-white rounded-lg shadow-md p-6">
-        {question ? (
-          <>
-            <h2 className="text-2xl font-bold text-dark mb-4">{question.question}</h2>
-            {!answered ? (
-              <div className="space-y-3">
-                {question.options.map((opt, idx) => (
-                  <label
-                    key={idx}
-                    className="flex items-center gap-2 border p-2 rounded cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="answer"
-                      value={opt}
-                      checked={selected === opt}
-                      onChange={() => setSelected(opt)}
-                    />
-                    <span className="text-dark">{opt}</span>
-                  </label>
-                ))}
-                <button
-                  onClick={submit}
-                  disabled={!selected}
-                  className="w-full py-3 bg-primary text-white rounded hover:bg-accent transition disabled:opacity-50"
-                >
-                  Submit Answer
-                </button>
-              </div>
-            ) : (
-              <>
-                <h3 className="text-xl font-semibold text-dark mb-3">
-                  Live Results
-                </h3>
-                {Object.entries(results).length === 0 ? (
-                  <p className="text-mediumgray">No responses yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {Object.entries(results).map(([student, answer]) => (
-                      <div
-                        key={student}
-                        className="border p-2 rounded flex justify-between"
-                      >
-                        <span className="text-dark">{student}</span>
-                        <span className="text-primary">{answer}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          <p className="text-mediumgray">Waiting for the teacher to start a poll...</p>
-        )}
-      </div>
-    </div>
-  );
+  // 3. Results view (after submission or timeout)
+  if (question && answered) {
+    return (
+      <ResultsView
+        question={question}
+        results={results}
+        totalResponses={totalResponses}
+      />
+    );
+  }
+
+  // 4. Waiting loader by default
+  return <WaitingLoader />;
 }
