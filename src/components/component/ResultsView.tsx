@@ -77,11 +77,11 @@ export default function ResultsView({
           </div>
 
           {/* Total Responses Info */}
-          <div className="mb-4 text-center">
+          {/* <div className="mb-4 text-center">
             <span className="text-sm text-gray-600">
               Total Responses: {totalResponses || 0}
             </span>
-          </div>
+          </div> */}
 
           {/* Results */}
           <div className="space-y-3 mb-8">
