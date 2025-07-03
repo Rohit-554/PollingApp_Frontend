@@ -26,66 +26,92 @@ export default function TeacherDashboard() {
   const createPoll = () => {
     socket.emit("create-poll", {
       question,
-      options,
+      options: options.filter((o) => o.trim() !== ""),
       duration,
     });
     setPollActive(true);
   };
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Teacher Dashboard</h2>
-      {!pollActive ? (
-        <div className="space-y-4">
-          <input
-            className="border p-2 w-full"
-            placeholder="Enter question"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-          />
-          {options.map((opt, idx) => (
+    <div className="min-h-screen bg-lightbg flex flex-col items-center p-6">
+      <div className="max-w-xl w-full bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-dark mb-4">Teacher Dashboard</h2>
+
+        {!pollActive ? (
+          <>
             <input
-              key={idx}
-              className="border p-2 w-full"
-              placeholder={`Option ${idx + 1}`}
-              value={opt}
-              onChange={(e) => {
-                const newOpts = [...options];
-                newOpts[idx] = e.target.value;
-                setOptions(newOpts);
-              }}
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Enter your question"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
             />
-          ))}
-          <button
-            onClick={() => setOptions([...options, ""])}
-            className="text-blue-600"
-          >
-            + Add Option
-          </button>
-          <input
-            type="number"
-            className="border p-2 w-24"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-          />
-          <button
-            onClick={createPoll}
-            className="px-4 py-2 bg-purple-600 text-white rounded"
-          >
-            Start Poll
-          </button>
-        </div>
-      ) : (
-        <div>
-          <h3 className="font-semibold mb-2">Results</h3>
-          {Object.entries(results).map(([studentId, answer]) => (
-            <div key={studentId} className="p-2 border-b">
-              {studentId}: {answer}
+
+            {options.map((opt, idx) => (
+              <input
+                key={idx}
+                className="w-full border p-2 rounded mb-2"
+                placeholder={`Option ${idx + 1}`}
+                value={opt}
+                onChange={(e) => {
+                  const updated = [...options];
+                  updated[idx] = e.target.value;
+                  setOptions(updated);
+                }}
+              />
+            ))}
+
+            <button
+              className="text-primary mb-3"
+              onClick={() => setOptions([...options, ""])}
+            >
+              + Add Option
+            </button>
+
+            <div className="flex items-center gap-2 mb-4">
+              <label className="text-mediumgray">Duration:</label>
+              <input
+                type="number"
+                min={10}
+                className="border p-2 rounded w-24"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+              />
+              <span className="text-mediumgray">seconds</span>
             </div>
-          ))}
-          <p className="mt-4">Waiting for all students or timer to end...</p>
-        </div>
-      )}
+
+            <button
+              onClick={createPoll}
+              className="w-full py-3 bg-primary text-white font-medium rounded hover:bg-accent transition"
+            >
+              Start Poll
+            </button>
+          </>
+        ) : (
+          <>
+            <h3 className="text-xl font-semibold text-dark mb-3">
+              Live Results
+            </h3>
+            {Object.entries(results).length === 0 ? (
+              <p className="text-mediumgray">Waiting for responses...</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(results).map(([student, answer]) => (
+                  <div
+                    key={student}
+                    className="border p-2 rounded flex justify-between"
+                  >
+                    <span className="text-dark">{student}</span>
+                    <span className="text-primary">{answer}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="mt-4 text-mediumgray">
+              Waiting for all students or timer to end.
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

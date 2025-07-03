@@ -5,22 +5,28 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <h1 className="text-3xl font-bold mb-4">Welcome to the Live Polling System</h1>
-      <p className="mb-6 text-gray-600">Please select your role:</p>
-      <div className="flex gap-4">
-        <button
-          onClick={() => navigate("/student")}
-          className="px-6 py-3 bg-purple-600 text-white rounded hover:bg-purple-700"
-        >
-          I’m a Student
-        </button>
-        <button
-          onClick={() => navigate("/teacher")}
-          className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          I’m a Teacher
-        </button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-lightbg">
+      <div className="bg-white p-10 rounded-lg shadow-lg max-w-md w-full text-center">
+        <h1 className="text-3xl font-bold text-dark mb-2">
+          Live Polling System
+        </h1>
+        <p className="text-mediumgray mb-6">
+          Select your role to get started
+        </p>
+        <div className="flex flex-col gap-4">
+          <button
+            onClick={() => navigate("/student")}
+            className="w-full py-3 rounded bg-primary text-white font-medium hover:bg-accent transition"
+          >
+            I’m a Student
+          </button>
+          <button
+            onClick={() => navigate("/teacher")}
+            className="w-full py-3 rounded border border-mediumgray text-dark hover:bg-lightbg transition"
+          >
+            I’m a Teacher
+          </button>
+        </div>
       </div>
     </div>
   );

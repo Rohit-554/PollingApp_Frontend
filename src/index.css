@@ -1,3 +1,21 @@
-@tailwind base;
-@tailwind components;
 @tailwind utilities;
+@import "tailwindcss";
+@theme {
+  --color-primary: #7759DA;
+  --color-secondary: #5767DD;
+  --color-accent: #4F00E5;
+  --color-lightbg: #F2F2F2;
+  --color-darktext: #373737;
+  --color-mediumgray: #666666;
+}
+
+@layer utilities {
+  .bg-primary { background-color: var(--color-primary); }
+  .hover\:bg-primary:hover { background-color: var(--color-primary); }
+  .bg-accent { background-color: var(--color-accent); }
+  .hover\:bg-accent:hover { background-color: var(--color-accent); }
+  .text-dark { color: var(--color-darktext); }
+  .text-mediumgray { color: var(--color-mediumgray); }
+  .text-primary { color: var(--color-primary); }
+  .bg-lightbg { background-color: var(--color-lightbg); }
+}
