@@ -4,7 +4,8 @@ import StudentNameEntry from "./component/StudentNameEntry";
 import WaitingLoader from "./component/WaitingLoader";
 import QuestionInterface from "./component/QuestionInterface";
 import ResultsView from "./component/ResultsView";
-
+import ChatPanel from "./ChatPanel";
+import ChatToggle from "./ChatToggle";
 export default function StudentDashboard() {
   const [name, setName] = useState(sessionStorage.getItem("studentName") || "");
   const [question, setQuestion] = useState(null);
@@ -15,72 +16,89 @@ export default function StudentDashboard() {
   const [totalResponses, setTotalResponses] = useState(0);
   const [hasJoined, setHasJoined] = useState(false);
   const [pendingResults, setPendingResults] = useState(null);
-  // On mount, set up socket listeners
 
   useEffect(() => {
-  if (question && pendingResults) {
-    console.log("Processing pending results because question is now available:", pendingResults);
-    processResults(pendingResults, question);
-    setPendingResults(null);
-  }
-}, [question, pendingResults]);
+    if (question && pendingResults) {
+      console.log("Processing pending results because question is now available:", pendingResults);
+      processResults(pendingResults, question);
+      setPendingResults(null);
+    }
+  }, [question, pendingResults]);
 
 
   useEffect(() => {
-  socket.on("new-poll", (poll) => {
-  console.log("New poll received:", poll);
-  setQuestion(poll);
-  setAnswered(false);
-  setSelected("");
-  setResults({});
-  setTotalResponses(0);
-  setTimeLeft(poll.duration || 60);
+    socket.on("kicked", () => {
+      alert("You have been removed from the poll.");
+      setTimeout(() => {
+        sessionStorage.clear();
+        window.location.reload(); // or redirect to landing page
+      }, 2000);
 
-  // If there were results that arrived before question was set
-  if (pendingResults) {
-    console.log("Processing pending results after question set:", pendingResults);
-    processResults(pendingResults, poll);
-    setPendingResults(null);
-  }
-  });
+      sessionStorage.clear();
+      window.location.reload(); // or redirect to landing page
+    });
 
-  
-
-  // Listen for poll results
-  socket.on("poll-results", (data) => {
-  console.log("Poll results received:", data);
-
-  if (!question) {
-    console.warn("Received poll-results but no active question yet. Storing for later.");
-    setPendingResults(data);
-    return;
-  }
-
-  processResults(data, question);
-  });
+    return () => {
+      socket.off("kicked");
+    };
+  }, []);
 
 
+  useEffect(() => {
+    socket.on("new-poll", (poll) => {
+      console.log("New poll received:", poll);
+      setQuestion(poll);
+      setAnswered(false);
+      setSelected("");
+      setResults({});
+      setTotalResponses(0);
+      setTimeLeft(poll.duration || 60);
+
+      // If there were results that arrived before question was set
+      if (pendingResults) {
+        console.log("Processing pending results after question set:", pendingResults);
+        processResults(pendingResults, poll);
+        setPendingResults(null);
+      }
+    });
 
 
 
-  socket.on("poll-ended", () => {
-    console.log("Poll ended.");
-    setAnswered(true);
-  });
+    // Listen for poll results
+    socket.on("poll-results", (data) => {
+      console.log("Poll results received:", data);
 
-  socket.on("kicked", () => {
-  alert("You were kicked by the teacher.");
-  sessionStorage.removeItem("studentName");
-  window.location.reload();
-  });
+      if (!question) {
+        console.warn("Received poll-results but no active question yet. Storing for later.");
+        setPendingResults(data);
+        return;
+      }
+
+      processResults(data, question);
+    });
 
 
-  return () => {
-    socket.off("new-poll");
-    socket.off("poll-results");
-    socket.off("poll-ended");
-  };
-}, []);
+
+
+
+    socket.on("poll-ended", () => {
+      console.log("Poll ended.");
+      setAnswered(true);
+    });
+
+    socket.on("kicked", () => {
+      alert("You were kicked by the teacher.");
+      sessionStorage.removeItem("studentName");
+      window.location.reload();
+    });
+
+
+    return () => {
+      socket.off("new-poll");
+      socket.off("poll-results");
+      socket.off("poll-ended");
+    };
+  }, []);
 
 
 
@@ -102,10 +120,10 @@ export default function StudentDashboard() {
   }, [question, answered, timeLeft]);
 
   const handleContinue = () => {
-  if (name.trim()) {
-    sessionStorage.setItem("studentName", name);
-    socket.emit("student-join", name);
-    setHasJoined(true);
+    if (name.trim()) {
+      sessionStorage.setItem("studentName", name);
+      socket.emit("student-join", name);
+      setHasJoined(true);
     }
   };
 
@@ -118,73 +136,99 @@ export default function StudentDashboard() {
   };
 
   // Render flow
-
+  const ChatToggleComponent = (
+    <div style={{
+      position: "fixed",
+      bottom: 20,
+      right: 20,
+      zIndex: 1000,
+      maxWidth: 350,
+      minWidth: 250
+    }}>
+      <ChatToggle socket={socket} senderName={name} />
+    </div>
+  );
   // 1. Enter name screen
   if (!hasJoined) {
-  return (
-    <StudentNameEntry
-      name={name}
-      setName={setName}
-      onContinue={handleContinue}
-    />
-  );
-}
+    return (
+      <>
+        <StudentNameEntry
+          name={name}
+          setName={setName}
+          onContinue={handleContinue}
+        />
+        {ChatToggleComponent}
+      </>
+    );
+  }
 
 
   // 2. Question interface (poll active)
   if (question && !answered) {
     return (
-      <QuestionInterface
-        question={question}
-        selected={selected}
-        setSelected={setSelected}
-        onSubmit={handleSubmit}
-        timeLeft={timeLeft}
-      />
+      <>
+        <QuestionInterface
+          question={question}
+          selected={selected}
+          setSelected={setSelected}
+          onSubmit={handleSubmit}
+          timeLeft={timeLeft}
+        />
+        {ChatToggleComponent}
+      </>
     );
   }
 
   // 3. Results view (after submission or timeout)
   if (question && answered) {
     return (
-      <ResultsView
-        question={question}
-        results={results}
-        totalResponses={totalResponses}
-      />
+      <>
+        <ResultsView
+          question={question}
+          results={results}
+          totalResponses={totalResponses}
+        />
+        {ChatToggleComponent}
+      </>
     );
   }
 
+
   // 4. Waiting loader by default
-  return <WaitingLoader />;
+  return (
+    <>
+      <WaitingLoader />
+      {ChatToggleComponent}
+    </>
+  );
 
 
   function processResults(data, question) {
-  let optionCounts;
+    let optionCounts;
 
-  if (Object.values(data).some((v) => typeof v === "string")) {
-    // Transform student answers into counts
-    optionCounts = {};
-    question.options.forEach((opt) => {
-      optionCounts[opt] = 0;
-    });
-    Object.values(data).forEach((answer) => {
-      if (Object.prototype.hasOwnProperty.call(optionCounts, answer)) {
-        optionCounts[answer]++;
-      }
-    });
-  } else {
-    optionCounts = data;
+    if (Object.values(data).some((v) => typeof v === "string")) {
+      // Transform student answers into counts
+      optionCounts = {};
+      question.options.forEach((opt) => {
+        optionCounts[opt] = 0;
+      });
+      Object.values(data).forEach((answer) => {
+        if (Object.prototype.hasOwnProperty.call(optionCounts, answer)) {
+          optionCounts[answer]++;
+        }
+      });
+    } else {
+      optionCounts = data;
+    }
+
+    console.log("Processed counts:", optionCounts);
+
+    const total = Object.values(optionCounts).reduce((sum, c) => sum + c, 0);
+    console.log("Total responses calculated:", total);
+
+    setResults(optionCounts);
+    setTotalResponses(total);
   }
-
-  console.log("Processed counts:", optionCounts);
-
-  const total = Object.values(optionCounts).reduce((sum, c) => sum + c, 0);
-  console.log("Total responses calculated:", total);
-
-  setResults(optionCounts);
-  setTotalResponses(total);
-}
 
 }
 
