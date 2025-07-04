@@ -149,6 +149,51 @@ npm run dev
 
 ---
 
+## 🖼️ Screenshots
+
+### 🚀 Landing Page
+
+![Landing Page](https://raw.githubusercontent.com/Rohit-554/PollingApp_Frontend/refs/heads/master/images/LandingPage.png)
+
+---
+
+### 🎓 Student Experience
+
+**Student Login & Chat:**
+
+![Student Login With Chat](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/StudentLoginWithChat.png?raw=true)
+
+**Question Received:**
+
+![Question Received](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/QuestionReceived.png?raw=true)
+
+**Answer Given by Two Students:**
+
+![Answers Given](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/AnswerGivenBytwo.png?raw=true)
+
+**Waiting for Poll:**
+
+![Student Loading](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/StudentLoading.png?raw=true)
+
+---
+
+### 👩‍🏫 Teacher Experience
+
+**Ask Question:**
+
+![Teacher Ask Question](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/TeacherAskQuestion.png?raw=true)
+
+**Waiting for Responses:**
+
+![Teacher Waiting](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/TeacherWaiting.png?raw=true)
+
+---
+
+### 📊 Results
+
+![Poll Result](https://github.com/Rohit-554/PollingApp_Frontend/blob/master/images/pollResult.png?raw=true)
+
+
 ##  Author
 
 Built with ❤️ by Rohit
