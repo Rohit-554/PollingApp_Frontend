@@ -19,34 +19,28 @@ Live, real-time interactive polling platform for classrooms, interviews, and wor
 
 ## 🛠️ Features
 
-✅ **Role Selection**
-Choose whether you are a teacher or a student.
-
-✅ **Teacher Dashboard**
-
-* Create polls with multiple options.
-* Set poll duration.
-* Mark correct answers.
-* See live results.
-* Kick out participants.
-* View poll history.
-
-✅ **Student Dashboard**
-
-* Join with your name.
-* Wait for the teacher to start.
-* Answer live polls.
-* See results instantly.
-
-✅ **Real-time Chat**
-
-* Teacher ↔ Student messaging.
-* All messages broadcast to everyone.
-
-✅ **Responsive Design**
-
-* Works across desktop, tablet, and mobile.
-
+```mermaid
+flowchart TD
+    A[Backend<br/>Features]
+    
+    A --> B[Poll<br/>Creation]
+    A --> C[Answer<br/>Submit]
+    A --> D[Live<br/>Results]
+    A --> E[Auto<br/>End]
+    A --> F[User<br/>Mgmt]
+    A --> G[Chat]
+    A --> H[Kick<br/>Out]
+    A --> I[History]
+    A --> J[CORS]
+    
+    F --> F1[Join/<br/>Leave]
+    F --> F2[Kick]
+    
+    style A fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#ffffff
+    style F fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px,color:#ffffff
+    style F1 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#ffffff
+    style F2 fill:#dc2626,stroke:#ef4444,stroke-width:2px,color:#ffffff
+```
 ---
 
 ## ⚙️ How It Works
